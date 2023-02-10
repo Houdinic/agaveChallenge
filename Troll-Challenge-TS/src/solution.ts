@@ -25,31 +25,38 @@ interface CurrentCell extends Cell {
     right: Cell;
     down: Cell;
 }
-  /**
-   * GOAL: average <1000 turns across ten tries. The best score we’ve seen is 430.
-   * Solution overview:
-   * Building stairs around the treasure to access it. (direction of the inital 1 should be
-   * facing the direction that has most blocks)
-   *         7  6
-   *      1  8  5
-   *      2  3  4
-   * 1. Move to the treasure using the shortest path
-   *    a. Bring the first block bypass on the way
-   * 2. while there's not enough blocks around treasure. Totol needed is (1+7)*7/2 = 28:
-   *    a. find the closest blocks
-   *    b. place it at the correct place
-   * 
-   * find the closest blocks:
-   * if !lastPlaceFetchBlock:
-   *    search from the blocks around treasure
-   * else:
-   *    search from the lastPlaceFetchBlock
-   *    
-   * 
-   * place it at the correct place:
-   * 
-   * 
-   */
+
+/**
+ * GOAL: average <1000 turns across ten tries. The best score we’ve seen is 430.
+ * Solution overview:
+ * Building stairs around the treasure to access it. (direction of the inital 1 should be
+ * facing the direction that has most blocks)
+ *         7  6
+ *      1  8  5
+ *      2  3  4
+ * 1. Move to the treasure using the shortest path
+ *    a. Bring the first block bypass on the way
+ * 2. while there's not enough blocks around treasure. Totol needed is (1+7)*7/2 = 28:
+ *    a. find the closest blocks
+ *    b. place it at the correct place
+ * 
+ * shortest path to treasure: return a list of instructions to treasure
+ *  use bfs to go over the maze;
+ *  each path should pick up the first encontered block
+ * 
+ * find the closest blocks:
+ * Need to memorize the path to the block
+ * if !lastPlaceFetchBlock:
+ *    search from the blocks around treasure
+ * else:
+ *    search from the lastPlaceFetchBlock
+ *    
+ * 
+ * place it at the correct place:
+ * use a 2D arrary to track how the blocks are placed around the treasure
+ *  start point of the stair should be either right, left, up or down of the treasure
+ * 
+ */
 export class Stacker {
   visited = new Set();
   treasure = false;
@@ -63,7 +70,6 @@ export class Stacker {
     
   }
 
-  // Replace this with your own wizardry
   turn = (currentCell: CurrentCell): Instruction => {
     if (!this.treasure) {
       return this.findTreasure(currentCell);
