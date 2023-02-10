@@ -27,15 +27,23 @@ interface CurrentCell extends Cell {
 }
   /**
    * Solution overview:
-   * 
+   * Building stairs around the treasure to access it. (direction of the inital 1 should be
+   * facing the direction that has most blocks)
+   *         7  6
+   *      1  8  5
+   *      2  3  4
    * 1. Move to the treasure using the shortest path
    *    a. Bring the first block bypass on the way
-   * 2. while there's not enough blocks around treasure:
+   * 2. while there's not enough blocks around treasure. Totol needed is (1+7)*7/2 = 28:
    *    a. find the closest blocks
    *    b. place it at the correct place
    * 
    * find the closest blocks:
-   * 
+   * if !lastPlaceFetchBlock:
+   *    search from the blocks around treasure
+   * else:
+   *    search from the lastPlaceFetchBlock
+   *    
    * 
    * place it at the correct place:
    * 
@@ -44,6 +52,14 @@ interface CurrentCell extends Cell {
 export class Stacker {
   visited = new Set();
   treasure = false;
+  lastPlaceFetchBlock: Cell = {
+    type: CellType.EMPTY,
+    level: -1
+  };
+  
+  constructor(){
+    
+  }
 
   // Replace this with your own wizardry
   turn = (currentCell: CurrentCell): Instruction => {
