@@ -26,10 +26,13 @@ interface CurrentCell extends Cell {
     down: Cell;
 }
   /**
-   * Move to the treasure with the shortest path
-   * Bring the first block bypass on the way
-   * while there's not enough blocks around treasure:
-   * (find the closest blocks) and (place it at the correct place)
+   * Solution overview:
+   * 
+   * 1. Move to the treasure using the shortest path
+   *    a. Bring the first block bypass on the way
+   * 2. while there's not enough blocks around treasure:
+   *    a. find the closest blocks
+   *    b. place it at the correct place
    * 
    * find the closest blocks:
    * 
