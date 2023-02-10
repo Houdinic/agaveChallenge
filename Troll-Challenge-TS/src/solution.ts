@@ -25,29 +25,55 @@ interface CurrentCell extends Cell {
     right: Cell;
     down: Cell;
 }
-
+  /**
+   * Move to the treasure with the shortest path
+   * Bring the first block bypass on the way
+   * while there's not enough blocks around treasure:
+   * (find the closest blocks) and (place it at the correct place)
+   * 
+   * find the closest blocks:
+   * 
+   * 
+   * place it at the correct place:
+   * 
+   * 
+   */
 export class Stacker {
-    // Replace this with your own wizardry
-    turn = (currentCell: CurrentCell): Instruction => {
-        // Pick an action randomly
-        var random = Math.random() * 6 >> 0;
+  visited = new Set();
+  treasure = false;
 
-        switch (random) {
-            case 0:
-                return Instruction.LEFT;
-            case 1:
-                return Instruction.UP;
-            case 2:
-                return Instruction.RIGHT;
-            case 3:
-                return Instruction.DOWN;
-            case 4:
-                return Instruction.PICKUP;
-            case 5:
-            default:
-                return Instruction.DROP;
-        }
-    };
+  // Replace this with your own wizardry
+  turn = (currentCell: CurrentCell): Instruction => {
+    if (!this.treasure) {
+      return this.findTreasure(currentCell);
+    }
 
-    // More wizardry here
+    return this.move(currentCell);
+  };
+
+  findTreasure(currentCell: CurrentCell): Instruction {
+    return Instruction.DOWN;
+  }
+
+  findClosestBlock(currentCell: CurrentCell): Instruction {
+    return Instruction.DOWN;
+  }
+
+  placeBlock(currentCell: CurrentCell): Instruction {
+    return Instruction.DOWN;
+  }
+
+  /**
+   * Any move will cost 1 turn;
+   * Pick a block and it needs to be placed at the place it needs to be
+   *
+   * @param currentCell
+   * @returns {Instruction}
+   */
+  move(currentCell: CurrentCell): Instruction {
+    return Instruction.DOWN;
+  }
+  dfs(currentCell: CurrentCell) {}
+
+  // More wizardry here
 }
