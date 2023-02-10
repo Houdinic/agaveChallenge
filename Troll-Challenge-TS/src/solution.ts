@@ -44,18 +44,20 @@ interface CurrentCell extends Cell {
  *    b. place it at the correct place
  * 
  * function: shortest path to treasure
- *  use bfs to go over the maze;
+ *  use bfs to traverse the maze, stop and return the path when encounter the treasure
  *  each path should pick up the first encontered block
  * 
  * function: find the closest blocks
  *  Need to memorize the path to the block
+ *  if it's the first/round:
+ *      different strategy for closest since the start point could be different
  *  if !lastPlaceFetchBlock:
  *    search from the entrance of the stair around treasure
  *  else:
  *    search from the lastPlaceFetchBlock
  *    
  * 
- * function: place it at the correct place
+ * function: place it at the correct place (could improve by reaching out towards the direction)
  * use a 2D arrary to track how the blocks are placed around the treasure
  *  start point of the stair should be either right, left, up or down of the treasure
  * 
@@ -64,14 +66,13 @@ export class Stacker {
   visited = new Set();
   treasure = false;
   blockUsed = 0;
+  moves = new Array<Instruction>();
   lastPlaceFetchBlock: Cell = {
     type: CellType.EMPTY,
-    level: -1
+    level: -1,
   };
-  
-  constructor(){
-    
-  }
+
+  constructor() {}
 
   turn = (currentCell: CurrentCell): Instruction => {
     if (!this.treasure) {
@@ -94,16 +95,14 @@ export class Stacker {
   }
 
   /**
-   * Any move will cost 1 turn;
-   * Pick a block and it needs to be placed at the place it needs to be
-   *
-   * @param currentCell
-   * @returns {Instruction}
+   * Find the closest certain type of the cell to current cell.
+   * @param {CurrentCell} currentCell
+   * @param {CellType} targetCellType
    */
-  move(currentCell: CurrentCell): Instruction {
-    return Instruction.DOWN;
-  }
-  dfs(currentCell: CurrentCell) {}
+  private shortestPathToCell(
+    currentCell: CurrentCell,
+    targetCellType: CellType
+  ) {
 
-  // More wizardry here
+  }
 }
