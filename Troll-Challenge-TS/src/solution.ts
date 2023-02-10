@@ -26,6 +26,7 @@ interface CurrentCell extends Cell {
     down: Cell;
 }
   /**
+   * GOAL: average <1000 turns across ten tries. The best score we’ve seen is 430.
    * Solution overview:
    * Building stairs around the treasure to access it. (direction of the inital 1 should be
    * facing the direction that has most blocks)
@@ -52,6 +53,7 @@ interface CurrentCell extends Cell {
 export class Stacker {
   visited = new Set();
   treasure = false;
+  blockUsed = 0;
   lastPlaceFetchBlock: Cell = {
     type: CellType.EMPTY,
     level: -1
