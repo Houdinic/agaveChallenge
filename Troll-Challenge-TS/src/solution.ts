@@ -78,6 +78,7 @@ export class Stacker {
     type: CellType.EMPTY,
     level: -1,
   };
+  prvStep = Instruction.PICKUP;
   nextStep = Instruction.PICKUP;
 
   constructor() {}
@@ -118,36 +119,40 @@ export class Stacker {
       return this.nextStep;
     }
     if (
+      this.reverseDirct(this.prvStep) !== Instruction.DOWN &&
       this.hasVisited(Instruction.DOWN) &&
       this.reachable(currentCell, currentCell.down)
     ) {
       return Instruction.DOWN;
     }
     if (
+      this.reverseDirct(this.prvStep) !== Instruction.RIGHT &&
       this.hasVisited(Instruction.RIGHT) &&
       this.reachable(currentCell, currentCell.right)
     ) {
       return Instruction.RIGHT;
     }
-    // }
-    // if (
-    //   this.hasVisited(Instruction.UP) &&
-    //   this.reachable(currentCell, currentCell.up)
-    // ) {
-    //   return Instruction.UP;
-    // }
-    // if (
-    //   this.hasVisited(Instruction.LEFT) &&
-    //   this.reachable(currentCell, currentCell.left)
-    // ) {
-    //   return Instruction.LEFT;
+    if (
+      this.reverseDirct(this.prvStep) !== Instruction.UP &&
+      this.hasVisited(Instruction.UP) &&
+      this.reachable(currentCell, currentCell.up)
+    ) {
+      return Instruction.UP;
+    }
+    if (
+      this.reverseDirct(this.prvStep)!== Instruction.LEFT &&
+      this.hasVisited(Instruction.LEFT) &&
+      this.reachable(currentCell, currentCell.left)
+    ) {
+      return Instruction.LEFT;
+    }
       // There's no way to go, need to pop the existing path and retry.
     console.log(this.pathStack)
     if (this.pathStack.length > 0) {
-    const lastDirect = <Instruction>this.pathStack.pop();
-    curInstct = this.reverseDirct(lastDirect);
+        const lastDirect = <Instruction>this.pathStack.pop();
+        curInstct = this.reverseDirct(lastDirect);
     }
-
+    console.log(this.visited);
     return curInstct;
   }
   private neighborsCheck(curCell: CurrentCell, targetCellType: CellType) {
@@ -175,6 +180,7 @@ export class Stacker {
       return false;
     } else {
       this.visited.add(pathString);
+      this.prvStep = direction;
     }
     return true;
   }
