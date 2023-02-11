@@ -20,16 +20,16 @@ interface Cell {
 }
 
 interface CurrentCell extends Cell {
-    left: Cell;
-    up: Cell;
-    right: Cell;
-    down: Cell;
+  left: Cell;
+  up: Cell;
+  right: Cell;
+  down: Cell;
 }
 
 interface BFSSearch {
-  cell: CurrentCell;
+  curCell: CurrentCell;
   step: number;
-  instructions: Array<Instruction>;
+  path: Array<Instruction>;
 }
 
 /**
@@ -69,28 +69,27 @@ interface BFSSearch {
  * 
  */
 export class Stacker {
-  visited = new Set();
+  visited = new Set<string>();
+  pathStack = new Array<Instruction>();
   treasure = false;
   blockUsed = 0;
-  moves = new Array<Instruction>();
+//   moves = new Array<Instruction>();
   lastPlaceFetchBlock: Cell = {
     type: CellType.EMPTY,
     level: -1,
   };
+  nextStep = Instruction.PICKUP;
 
   constructor() {}
 
   turn = (currentCell: CurrentCell): Instruction => {
+    let curInst = Instruction.PICKUP;
     if (!this.treasure) {
-      return this.findTreasure(currentCell);
+      curInst = <Instruction>this.findPathToCell(currentCell, CellType.GOLD);
     }
-
-    return Instruction.DOWN;
+    console.log("Instruction: " + curInst);
+    return curInst;
   };
-
-  findTreasure(currentCell: CurrentCell): Instruction {
-    return Instruction.DOWN;
-  }
 
   findClosestBlock(currentCell: CurrentCell): Instruction {
     return Instruction.DOWN;
@@ -108,28 +107,98 @@ export class Stacker {
    * @param {CurrentCell} currentCell
    * @param {CellType} targetCellType
    */
-  private shortestPathToCell(
+  private findPathToCell(
     currentCell: CurrentCell,
     targetCellType: CellType
-  ) {
-    let queue = new Array<BFSSearch>();
-    queue.push(<BFSSearch>{
-      cell: currentCell,
-      step: 0,
-      instructions: new Array<Instruction>(),
-    });
-    let step = 0;
-    while (queue) {
-      let cur = queue.shift();
+  ): Instruction {
+    let curInstct = Instruction.PICKUP;
+    if (this.neighborsCheck(currentCell, targetCellType)) {
+      this.treasure = true;
+      console.log("found the Gold----------------");
+      return this.nextStep;
     }
+    if (
+      this.hasVisited(Instruction.DOWN) &&
+      this.reachable(currentCell, currentCell.down)
+    ) {
+      return Instruction.DOWN;
+    }
+    if (
+      this.hasVisited(Instruction.RIGHT) &&
+      this.reachable(currentCell, currentCell.right)
+    ) {
+      return Instruction.RIGHT;
+    }
+    // }
+    // if (
+    //   this.hasVisited(Instruction.UP) &&
+    //   this.reachable(currentCell, currentCell.up)
+    // ) {
+    //   return Instruction.UP;
+    // }
+    // if (
+    //   this.hasVisited(Instruction.LEFT) &&
+    //   this.reachable(currentCell, currentCell.left)
+    // ) {
+    //   return Instruction.LEFT;
+      // There's no way to go, need to pop the existing path and retry.
+    console.log(this.pathStack)
+    if (this.pathStack.length > 0) {
+    const lastDirect = <Instruction>this.pathStack.pop();
+    curInstct = this.reverseDirct(lastDirect);
+    }
+
+    return curInstct;
+  }
+  private neighborsCheck(curCell: CurrentCell, targetCellType: CellType) {
+    if (curCell.down.type === targetCellType) {
+      this.nextStep = Instruction.DOWN;
+      return true;
+    } else if (curCell.up.type === targetCellType) {
+      this.nextStep = Instruction.UP;
+      return true;
+    } else if (curCell.right.type === targetCellType) {
+      this.nextStep = Instruction.RIGHT;
+      return true;
+    } else if (curCell.left.type === targetCellType) {
+      this.nextStep = Instruction.LEFT;
+      return true;
+    }
+    return false;
+  }
+  private hasVisited(direction: Instruction): boolean{
+    this.pathStack.push(direction);
+    const pathString = this.pathStack.join();
+    if (this.visited.has(pathString)) {
+      // This direction has been visited
+      this.pathStack.pop();
+      return false;
+    } else {
+      this.visited.add(pathString);
+    }
+    return true;
   }
 
-  private reachable(curCell: CurrentCell, nextCell: CurrentCell) {
+  private reverseDirct(curDirection: Instruction): Instruction {
+    switch (curDirection) {
+        case Instruction.DOWN:
+            return Instruction.UP;
+        case Instruction.UP:
+            return Instruction.DOWN;
+        case Instruction.RIGHT:
+            return Instruction.LEFT;
+        default:
+            return Instruction.RIGHT;
+    }
+  }
+  private reachable(curCell: CurrentCell, nextCell: Cell) {
     if (
+      !nextCell ||
       nextCell.type == CellType.WALL ||
       Math.abs(curCell.level - nextCell.level) > 1
     ) {
       return false;
     }
+    return true;
   }
 }
