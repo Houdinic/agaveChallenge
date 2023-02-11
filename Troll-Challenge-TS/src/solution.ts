@@ -26,6 +26,12 @@ interface CurrentCell extends Cell {
     down: Cell;
 }
 
+interface BFSSearch {
+  cell: CurrentCell;
+  step: number;
+  instructions: Array<Instruction>;
+}
+
 /**
  * GOAL: average <1000 turns across ten tries. The best score we’ve seen is 430.
  * Solution overview:
@@ -79,7 +85,7 @@ export class Stacker {
       return this.findTreasure(currentCell);
     }
 
-    return this.move(currentCell);
+    return Instruction.DOWN;
   };
 
   findTreasure(currentCell: CurrentCell): Instruction {
@@ -96,6 +102,9 @@ export class Stacker {
 
   /**
    * Find the closest certain type of the cell to current cell.
+   * CellType
+   *    Gold: we need to stop 2 steps away from gold
+   *    Block: we will only search for block that not surrouding the Gold.
    * @param {CurrentCell} currentCell
    * @param {CellType} targetCellType
    */
@@ -103,6 +112,24 @@ export class Stacker {
     currentCell: CurrentCell,
     targetCellType: CellType
   ) {
+    let queue = new Array<BFSSearch>();
+    queue.push(<BFSSearch>{
+      cell: currentCell,
+      step: 0,
+      instructions: new Array<Instruction>(),
+    });
+    let step = 0;
+    while (queue) {
+      let cur = queue.shift();
+    }
+  }
 
+  private reachable(curCell: CurrentCell, nextCell: CurrentCell) {
+    if (
+      nextCell.type == CellType.WALL ||
+      Math.abs(curCell.level - nextCell.level) > 1
+    ) {
+      return false;
+    }
   }
 }
