@@ -17,6 +17,14 @@ var CellType;
     CellType[CellType["BLOCK"] = 2] = "BLOCK";
     CellType[CellType["GOLD"] = 3] = "GOLD";
 })(CellType || (CellType = {}));
+var mapCellType;
+(function (mapCellType) {
+    mapCellType[mapCellType["EMPTY"] = 0] = "EMPTY";
+    mapCellType[mapCellType["WALL"] = 1] = "WALL";
+    mapCellType[mapCellType["BLOCK"] = 2] = "BLOCK";
+    mapCellType[mapCellType["GOLD"] = 3] = "GOLD";
+    mapCellType[mapCellType["UNKNOWN"] = 4] = "UNKNOWN";
+})(mapCellType || (mapCellType = {}));
 /**
  * GOAL: average <1000 turns across ten tries. The best score we’ve seen is 430.
  * Solution overview:
@@ -25,8 +33,8 @@ var CellType;
  *         7  6
  *      1  8  5
  *      2  3  4
- * 1. Move to the treasure using the shortest path
- *    a. Bring the first block bypass on the way
+ * 1. Explore the whole map and memorized places that bypass.
+ *    a. Try to find one of the four corner and draw the map.
  * 2. find the direction with closest number of building blocks.
  *  a. explore from treasure
  *  b.
@@ -58,9 +66,11 @@ var Stacker = /** @class */ (function () {
         var _this = this;
         this.visited = new Set();
         this.pathStack = new Array();
+        // If we have found the treasure.
         this.treasure = false;
         this.blockUsed = 0;
-        //   moves = new Array<Instruction>();
+        // The recorded map block.
+        this.map = new Array();
         this.lastPlaceFetchBlock = {
             type: CellType.EMPTY,
             level: -1,
@@ -75,13 +85,12 @@ var Stacker = /** @class */ (function () {
             console.log("Instruction: " + curInst);
             return curInst;
         };
+        for (var i = 0; i < 18; i++) {
+            for (var j = 0; j < 18; j++) {
+                this.map[i][j] = mapCellType.UNKNOWN;
+            }
+        }
     }
-    Stacker.prototype.findClosestBlock = function (currentCell) {
-        return Instruction.DOWN;
-    };
-    Stacker.prototype.placeBlock = function (currentCell) {
-        return Instruction.DOWN;
-    };
     /**
      * Find the closest certain type of the cell to current cell.
      * CellType
@@ -98,32 +107,30 @@ var Stacker = /** @class */ (function () {
             return this.nextStep;
         }
         if (this.reverseDirct(this.prvStep) !== Instruction.DOWN &&
-            this.hasVisited(Instruction.DOWN) &&
-            this.reachable(currentCell, currentCell.down)) {
+            this.reachable(currentCell, currentCell.down) &&
+            this.notVisited(Instruction.DOWN)) {
             return Instruction.DOWN;
         }
         if (this.reverseDirct(this.prvStep) !== Instruction.RIGHT &&
-            this.hasVisited(Instruction.RIGHT) &&
-            this.reachable(currentCell, currentCell.right)) {
+            this.reachable(currentCell, currentCell.right) &&
+            this.notVisited(Instruction.RIGHT)) {
             return Instruction.RIGHT;
         }
         if (this.reverseDirct(this.prvStep) !== Instruction.UP &&
-            this.hasVisited(Instruction.UP) &&
-            this.reachable(currentCell, currentCell.up)) {
+            this.reachable(currentCell, currentCell.up) &&
+            this.notVisited(Instruction.UP)) {
             return Instruction.UP;
         }
         if (this.reverseDirct(this.prvStep) !== Instruction.LEFT &&
-            this.hasVisited(Instruction.LEFT) &&
-            this.reachable(currentCell, currentCell.left)) {
+            this.reachable(currentCell, currentCell.left) &&
+            this.notVisited(Instruction.LEFT)) {
             return Instruction.LEFT;
         }
         // There's no way to go, need to pop the existing path and retry.
-        console.log(this.pathStack);
         if (this.pathStack.length > 0) {
             var lastDirect = this.pathStack.pop();
             curInstct = this.reverseDirct(lastDirect);
         }
-        console.log(this.visited);
         return curInstct;
     };
     Stacker.prototype.neighborsCheck = function (curCell, targetCellType) {
@@ -145,20 +152,6 @@ var Stacker = /** @class */ (function () {
         }
         return false;
     };
-    Stacker.prototype.hasVisited = function (direction) {
-        this.pathStack.push(direction);
-        var pathString = this.pathStack.join();
-        if (this.visited.has(pathString)) {
-            // This direction has been visited
-            this.pathStack.pop();
-            return false;
-        }
-        else {
-            this.visited.add(pathString);
-            this.prvStep = direction;
-        }
-        return true;
-    };
     Stacker.prototype.reverseDirct = function (curDirection) {
         switch (curDirection) {
             case Instruction.DOWN:
@@ -170,6 +163,24 @@ var Stacker = /** @class */ (function () {
             default:
                 return Instruction.RIGHT;
         }
+    };
+    // ------ Boolean helper -------
+    Stacker.prototype.isCorner = function () {
+    };
+    Stacker.prototype.notVisited = function (direction) {
+        this.pathStack.push(direction);
+        var pathString = this.pathStack.join();
+        console.log(pathString);
+        if (this.visited.has(pathString)) {
+            // This direction has been visited
+            this.pathStack.pop();
+            return false;
+        }
+        else {
+            this.visited.add(pathString);
+            this.prvStep = direction;
+        }
+        return true;
     };
     Stacker.prototype.reachable = function (curCell, nextCell) {
         if (!nextCell ||

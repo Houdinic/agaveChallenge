@@ -14,6 +14,14 @@ enum CellType {
     GOLD,
 }
 
+enum mapCellType {
+    EMPTY,
+    WALL,
+    BLOCK,
+    GOLD,
+    UNKNOWN
+}
+
 interface Cell {
     type: CellType;
     level: number;
@@ -40,8 +48,8 @@ interface BFSSearch {
  *         7  6
  *      1  8  5
  *      2  3  4
- * 1. Move to the treasure using the shortest path
- *    a. Bring the first block bypass on the way
+ * 1. Explore the whole map and memorized places that bypass.
+ *    a. Try to find one of the four corner and draw the map.
  * 2. find the direction with closest number of building blocks. 
  *  a. explore from treasure
  *  b. 
@@ -71,9 +79,11 @@ interface BFSSearch {
 export class Stacker {
   visited = new Set<string>();
   pathStack = new Array<Instruction>();
+  // If we have found the treasure.
   treasure = false;
   blockUsed = 0;
-//   moves = new Array<Instruction>();
+  // The recorded map block.
+  map = new Array<Array<mapCellType>>();
   lastPlaceFetchBlock: Cell = {
     type: CellType.EMPTY,
     level: -1,
@@ -81,7 +91,13 @@ export class Stacker {
   prvStep = Instruction.PICKUP;
   nextStep = Instruction.PICKUP;
 
-  constructor() {}
+  constructor() {
+    for (let i = 0; i < 18; i++) {
+      for (let j = 0; j < 18; j++) {
+        this.map[i][j] = mapCellType.UNKNOWN;
+      }
+    }
+  }
 
   turn = (currentCell: CurrentCell): Instruction => {
     let curInst = Instruction.PICKUP;
@@ -91,14 +107,6 @@ export class Stacker {
     console.log("Instruction: " + curInst);
     return curInst;
   };
-
-  findClosestBlock(currentCell: CurrentCell): Instruction {
-    return Instruction.DOWN;
-  }
-
-  placeBlock(currentCell: CurrentCell): Instruction {
-    return Instruction.DOWN;
-  }
 
   /**
    * Find the closest certain type of the cell to current cell.
@@ -120,41 +128,40 @@ export class Stacker {
     }
     if (
       this.reverseDirct(this.prvStep) !== Instruction.DOWN &&
-      this.hasVisited(Instruction.DOWN) &&
-      this.reachable(currentCell, currentCell.down)
+      this.reachable(currentCell, currentCell.down) &&
+      this.notVisited(Instruction.DOWN)
     ) {
       return Instruction.DOWN;
     }
     if (
       this.reverseDirct(this.prvStep) !== Instruction.RIGHT &&
-      this.hasVisited(Instruction.RIGHT) &&
-      this.reachable(currentCell, currentCell.right)
+      this.reachable(currentCell, currentCell.right) &&
+      this.notVisited(Instruction.RIGHT)
     ) {
       return Instruction.RIGHT;
     }
     if (
       this.reverseDirct(this.prvStep) !== Instruction.UP &&
-      this.hasVisited(Instruction.UP) &&
-      this.reachable(currentCell, currentCell.up)
+      this.reachable(currentCell, currentCell.up) &&
+      this.notVisited(Instruction.UP)
     ) {
       return Instruction.UP;
     }
     if (
-      this.reverseDirct(this.prvStep)!== Instruction.LEFT &&
-      this.hasVisited(Instruction.LEFT) &&
-      this.reachable(currentCell, currentCell.left)
+      this.reverseDirct(this.prvStep) !== Instruction.LEFT &&
+      this.reachable(currentCell, currentCell.left) &&
+      this.notVisited(Instruction.LEFT)
     ) {
       return Instruction.LEFT;
     }
-      // There's no way to go, need to pop the existing path and retry.
-    console.log(this.pathStack)
+    // There's no way to go, need to pop the existing path and retry.
     if (this.pathStack.length > 0) {
-        const lastDirect = <Instruction>this.pathStack.pop();
-        curInstct = this.reverseDirct(lastDirect);
+      const lastDirect = <Instruction>this.pathStack.pop();
+      curInstct = this.reverseDirct(lastDirect);
     }
-    console.log(this.visited);
     return curInstct;
   }
+
   private neighborsCheck(curCell: CurrentCell, targetCellType: CellType) {
     if (curCell.down.type === targetCellType) {
       this.nextStep = Instruction.DOWN;
@@ -171,9 +178,28 @@ export class Stacker {
     }
     return false;
   }
-  private hasVisited(direction: Instruction): boolean{
+
+  private reverseDirct(curDirection: Instruction): Instruction {
+    switch (curDirection) {
+      case Instruction.DOWN:
+        return Instruction.UP;
+      case Instruction.UP:
+        return Instruction.DOWN;
+      case Instruction.RIGHT:
+        return Instruction.LEFT;
+      default:
+        return Instruction.RIGHT;
+    }
+  }
+  // ------ Boolean helper -------
+  private isCorner() {
+    
+  }
+
+  private notVisited(direction: Instruction): boolean {
     this.pathStack.push(direction);
     const pathString = this.pathStack.join();
+    console.log(pathString);
     if (this.visited.has(pathString)) {
       // This direction has been visited
       this.pathStack.pop();
@@ -185,18 +211,6 @@ export class Stacker {
     return true;
   }
 
-  private reverseDirct(curDirection: Instruction): Instruction {
-    switch (curDirection) {
-        case Instruction.DOWN:
-            return Instruction.UP;
-        case Instruction.UP:
-            return Instruction.DOWN;
-        case Instruction.RIGHT:
-            return Instruction.LEFT;
-        default:
-            return Instruction.RIGHT;
-    }
-  }
   private reachable(curCell: CurrentCell, nextCell: Cell) {
     if (
       !nextCell ||
